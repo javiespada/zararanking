@@ -37,10 +37,24 @@ public class ProductServiceImpl implements ProductService {
          * 
          *  Pista: A la hora de filtrar, pasar los valores a mayúsculas o minúsculas. Ejemplo: Uso de la función SQL upper().
          */
-
         Map<String, Object> params = new HashMap<>();
 
-        String sql = "";
+        String sql = """
+            SELECT * 
+            FROM Products
+        """;
+
+        if (categories.isPresent()) {
+            List<String> categoryList = categories.get();
+            sql += "WHERE Lower (category) IN (";
+            for (int i = 0; i < categoryList.size() -1; i++){
+                sql += "':category" + i +"', ";
+                params.put("category"+i, categoryList.get(i));
+            }
+            sql += "':category" + categoryList.size() +"')";
+            params.put("category"+categoryList.size(), categoryList.get(categoryList.size()));
+        }
+        sql += ";";
 
         return jdbcTemplate.query(sql, params, new BeanPropertyRowMapper<>(Product.class));
     }
@@ -51,7 +65,10 @@ public class ProductServiceImpl implements ProductService {
          * TODO: EJERCICIO 1.b) Recupera las distintas categorias de los productos disponibles.
          */
 
-        String sql = "";
+        String sql = """
+            SELECT DISTINCT Category
+            FROM Products;
+        """;
 
         return jdbcTemplate.queryForList(sql, (SqlParameterSource) null, String.class);
     }
